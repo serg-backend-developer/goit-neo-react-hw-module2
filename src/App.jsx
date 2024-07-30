@@ -1,35 +1,61 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState, useEffect } from "react";
+
+import Description from "./components/Description/Description";
+import Feedback from "./components/Feedback/Feedback";
+import Notification from "./components/Notification/Notification";
+import Options from "./components/Options/Options";
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [feedback, setFdb] = useState(() => {
+    const storedData = window.localStorage.getItem("feedback");
+
+    if (storedData !== null) {
+      return JSON.parse(storedData);
+    } else
+      return {
+        good: 0,
+        neutral: 0,
+        bad: 0,
+      };
+  });
+
+  useEffect(() => {
+    window.localStorage.setItem("feedback", JSON.stringify(feedback));
+  }, [feedback]);
+
+  const updateFdb = (type) => {
+    setFdb((prevFdb) => ({
+      ...prevFdb,
+      [type]: prevFdb[type] + 1,
+    }));
+  };
+
+  const resetFdb = () => {
+    setFdb({
+      good: 0,
+      neutral: 0,
+      bad: 0,
+    });
+  };
+
+  const total = feedback.good + feedback.neutral + feedback.bad;
+  const positive = Math.round((feedback.good / total) * 100);
 
   return (
-    <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <div className="container">
+      <Description></Description>
+      <Options
+        options={feedback}
+        onFdb={updateFdb}
+        total={total}
+        onReset={resetFdb}
+      />
+      {total != 0 && (
+        <Feedback feedback={feedback} total={total} positive={positive}/>
+      )}
+      {total == 0 && <Notification />}
+    </div>
+  );
 }
 
-export default App
+export default App;
